@@ -1,0 +1,8 @@
+C:\Users\Student\source\repos\Vence_Garage\Vence_Garage\obj\Debug\Vence_Garage.csproj.AssemblyReference.cache
+C:\Users\Student\source\repos\Vence_Garage\Vence_Garage\obj\Debug\Vence_Garage.csproj.SuggestedBindingRedirects.cache
+C:\Users\Student\source\repos\Vence_Garage\Vence_Garage\obj\Debug\Vence_Garage.csproj.CoreCompileInputs.cache
+C:\Users\Student\source\repos\Vence_Garage\Vence_Garage\bin\Debug\Vence_Garage.exe.config
+C:\Users\Student\source\repos\Vence_Garage\Vence_Garage\bin\Debug\Vence_Garage.exe
+C:\Users\Student\source\repos\Vence_Garage\Vence_Garage\bin\Debug\Vence_Garage.pdb
+C:\Users\Student\source\repos\Vence_Garage\Vence_Garage\obj\Debug\Vence_Garage.exe
+C:\Users\Student\source\repos\Vence_Garage\Vence_Garage\obj\Debug\Vence_Garage.pdb
