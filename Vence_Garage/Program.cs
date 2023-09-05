@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 // Garage class represents parking garage and its levels and parking spots
 class Garage
@@ -10,7 +11,6 @@ class Garage
     // define constructor to build garage
     public Garage(int levels, int spacesPerLevel)
     {
-        // initialise twodimensional list
         parkingSpaces = new List<List<Vehicle>>();
 
         // initialise with "null" (null represents open spots)
@@ -80,14 +80,14 @@ class Garage
             }
 
             // no spot found
-            Console.WriteLine("Alle Parkplätze sind belegt");
+            Console.WriteLine("> Alle Parkplätze sind belegt");
             return (-1, -1);
         }
 
         // untruthy return from validity check
         else
         {
-            Console.WriteLine("Ungültiges oder bereits geparktes Kennzeichen");
+            Console.WriteLine("> Ungültiges oder bereits geparktes Kennzeichen");
             return (-1, -1);
         }
     }
@@ -176,7 +176,7 @@ class Garage
     // modification of level count during runtime
     public bool ModifyLevels(int newLevelCount)
     {
-        // add levels:
+        // add level
         if (newLevelCount > parkingSpaces.Count)
         {
             int levelsToAdd = newLevelCount - parkingSpaces.Count;
@@ -191,26 +191,50 @@ class Garage
             }
             return true;
         }
-        // remove levels:
+        // remove level
         else if (newLevelCount < parkingSpaces.Count)
         {
             int levelsToRemove = parkingSpaces.Count - newLevelCount;
-
-            // for-loop removes levels until number of removals reached
             for (int i = 0; i < levelsToRemove; i++)
             {
-                // try reparking 
-                if (!ModifyLevels(parkingSpaces.Count - 1))
+                // attempt moving from last level
+                if (!ReParkVehiclesFromLevel(parkingSpaces.Count - 1))
                 {
-                    return false; // not enough spots for reparking
+                    return false; // reparking failed
                 }
 
-                // remove empty levels
+                // remove now empty level
                 parkingSpaces.RemoveAt(parkingSpaces.Count - 1);
             }
             return true;
         }
-        return false; // no change if unsuccessful
+        return false; // no change if not successful
+    }
+
+    public bool ReParkVehiclesFromLevel(int level)
+    {
+        // get vehicles on layer and copy into new list
+        List<Vehicle> vehiclesOnLevel = new List<Vehicle>(parkingSpaces[level]);
+
+        // attempt reparking each vehicle
+        foreach (var vehicle in vehiclesOnLevel)
+        {
+            if (vehicle != null)
+            {
+                // remove vehicle from current spot
+                UnparkVehicle(vehicle.LicensePlate);
+
+                // attempt reparking on new spot
+                var (newLevel, newSpot) = ParkVehicle(vehicle);
+                if (newLevel == -1 && newSpot == -1)
+                {
+                    // no spot found -> failure
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }
 
@@ -250,31 +274,31 @@ class Program
         Garage garage = null;
 
         // begin user prompt
-        Console.WriteLine("Willkommen bei der Parkhaussimulation der Stadt Vence\n\n");
-        Console.WriteLine("Bitte geben Sie die Anzahl der Etagen ein:");
+        Console.WriteLine("> Willkommen bei der Parkhaussimulation der Stadt Vence\n\n");
+        Console.WriteLine("> Bitte geben Sie die Anzahl der Etagen ein:");
         string inputLevels = Console.ReadLine();
 
         // if level input not null & casting successful: valid input
         if (inputLevels != null && int.TryParse(inputLevels, out levels))
         {
-            Console.WriteLine($"Sie haben {levels} Etagen gewählt\n");
-            Console.WriteLine("Geben Sie nun die Anzahl an Parkplätzen je Etage an:");
+            Console.WriteLine($"> Sie haben {levels} Etagen gewählt\n");
+            Console.WriteLine("> Geben Sie nun die Anzahl an Parkplätzen je Etage an:");
             string inputSpots = Console.ReadLine();
 
             // check validity like before
             if (inputSpots != null && int.TryParse(inputSpots, out spots))
             {
-                Console.WriteLine($"Sie haben {spots} Parkplätze je Etage angegeben");
+                Console.WriteLine($"> Sie haben {spots} Parkplätze je Etage angegeben");
                 garage = new Garage(levels, spots);
             }
             else
             {
-                Console.WriteLine("Ungültige Eingabe. Bitte geben Sie eine gültige Nummer für die Anzahl der Parkplätze ein.");
+                Console.WriteLine("> Ungültige Eingabe. Bitte geben Sie eine gültige Nummer für die Anzahl der Parkplätze ein.");
             }
         }
         else
         {
-            Console.WriteLine("Ungültige Eingabe. Bitte geben Sie eine gültige Nummer für die Anzahl der Etagen ein.");
+            Console.WriteLine("> Ungültige Eingabe. Bitte geben Sie eine gültige Nummer für die Anzahl der Etagen ein.");
         }
 
         if (garage != null) // garage != null: placeholders replaced with actual values -> valid inputs
@@ -285,8 +309,8 @@ class Program
 
             while (keepRunning)
             {
-                Console.WriteLine("Was möchten Sie tun? Geben Sie die Ziffer der Funktion ein, die Sie nutzen möchten:\n");
-                Console.WriteLine("1 = Fahrzeug einparken\n2 = Fahrzeug ausparken\n3 = Fahrzeug finden\n4 = Anzahl verfügbarer Parkplätze anzeigen\n5 = Ebenenstruktur verändern\n6 = Programm beenden");
+                Console.WriteLine("> Was möchten Sie tun? Geben Sie die Ziffer der Funktion ein, die Sie nutzen möchten:\n");
+                Console.WriteLine("> 1 = Fahrzeug einparken\n> 2 = Fahrzeug ausparken\n> 3 = Fahrzeug finden\n> 4 = Anzahl verfügbarer Parkplätze anzeigen\n> 5 = Ebenenstruktur verändern\n> 6 = Programm beenden");
                 string inputMode = Console.ReadLine();
 
 
@@ -296,10 +320,10 @@ class Program
 
                     // parking new vehicle
                     case "1":
-                        Console.WriteLine("Fahrzeug einparken\nBitte geben Sie das Kennzeichen des Fahrzeugs an:");
+                        Console.WriteLine("> Fahrzeug einparken\nBitte geben Sie das Kennzeichen des Fahrzeugs an:");
                         string licensePlate = Console.ReadLine();
 
-                        Console.WriteLine("Auto oder Motorrad? (A/M eingeben)");
+                        Console.WriteLine("> Auto oder Motorrad? (A/M eingeben)");
                         string vehicleType = Console.ReadLine();
                         Vehicle vehicle = null;
 
@@ -318,7 +342,7 @@ class Program
                         // invalid input
                         else
                         {
-                            Console.WriteLine("Ungültige Eingabe");
+                            Console.WriteLine("> Ungültige Eingabe");
                         }
 
                         // park at coordinates
@@ -328,18 +352,18 @@ class Program
 
                         // correct potential output of "level 0"
                         {
-                            Console.WriteLine($"Fahrzeug geparkt auf Ebene {level + 1}, Parkplatz {spot + 1}");
+                            Console.WriteLine($"> Fahrzeug geparkt auf Ebene {level + 1}, Parkplatz {spot + 1}");
                         }
 
                         else
                         {
-                            Console.WriteLine("Fahrzeug konnte nicht geparkt werden");
+                            Console.WriteLine("> Fahrzeug konnte nicht geparkt werden");
                         }
                         break;
                     
                     // unpark vehicle
                     case "2":
-                        Console.WriteLine("Fahrzeug ausparken\nMöchten Sie das Fahrzeug über das Kennzeichen oder die Ebene und den Parkplatz ausparken? (K für Kennzeichen, E für Ebene und Parkplatz)");
+                        Console.WriteLine("> Fahrzeug ausparken\nMöchten Sie das Fahrzeug über das Kennzeichen oder die Ebene und den Parkplatz ausparken? (K für Kennzeichen, E für Ebene und Parkplatz)");
                         string unparkMethod = Console.ReadLine();
 
                         // check for unparking method
@@ -347,23 +371,23 @@ class Program
                         {
                             // by license plate
                             case "K":
-                                Console.WriteLine("Bitte geben Sie das Kennzeichen des auszuparkenden Fahrzeugs an:");
+                                Console.WriteLine("> Bitte geben Sie das Kennzeichen des auszuparkenden Fahrzeugs an:");
                                 string licensePlateToUnpark = Console.ReadLine();
                                 if (garage.UnparkVehicle(licensePlateToUnpark))
                                 {
-                                    Console.WriteLine("Fahrzeug erfolgreich ausgeparkt.");
+                                    Console.WriteLine("> Fahrzeug erfolgreich ausgeparkt.");
                                 }
                                 else
                                 {
-                                    Console.WriteLine("Fahrzeug konnte nicht ausgeparkt werden. Kennzeichen nicht gefunden.");
+                                    Console.WriteLine("> Fahrzeug konnte nicht ausgeparkt werden. Kennzeichen nicht gefunden.");
                                 }
                                 break;
 
                             // by level/spot
                             case "E":
-                                Console.WriteLine("Bitte geben Sie die Ebene des auszuparkenden Fahrzeugs an:");
+                                Console.WriteLine("> Bitte geben Sie die Ebene des auszuparkenden Fahrzeugs an:");
                                 string levelStr = Console.ReadLine();
-                                Console.WriteLine("Bitte geben Sie den Parkplatz des auszuparkenden Fahrzeugs an:");
+                                Console.WriteLine("> Bitte geben Sie den Parkplatz des auszuparkenden Fahrzeugs an:");
                                 string spotStr = Console.ReadLine();
 
                                 // check input
@@ -371,66 +395,66 @@ class Program
                                 {
                                     if (garage.UnparkVehicle(unparkLevel - 1, unparkSpot - 1))  // correct user input for right indices
                                     {
-                                        Console.WriteLine("Fahrzeug erfolgreich ausgeparkt.");
+                                        Console.WriteLine("> Fahrzeug erfolgreich ausgeparkt.");
                                     }
                                     else
                                     {
-                                        Console.WriteLine("Fahrzeug konnte nicht ausgeparkt werden. Ungültige Ebene oder Parkplatz.");
+                                        Console.WriteLine("> Fahrzeug konnte nicht ausgeparkt werden. Ungültige Ebene oder Parkplatz.");
                                     }
                                 }
                                 else
                                 {
-                                    Console.WriteLine("Ungültige Eingabe für Ebene oder Parkplatz.");
+                                    Console.WriteLine("> Ungültige Eingabe für Ebene oder Parkplatz.");
                                 }
                                 break;
 
                             default:
-                                Console.WriteLine("Ungültige Auswahl.");
+                                Console.WriteLine("> Ungültige Auswahl.");
                                 break;
                         }
                         break;
 
                     // find vehicle by license plate
                     case "3":
-                        Console.WriteLine("Fahrzeug finden\nBitte geben Sie das Kennzeichen des zu findenden Fahrzeugs an:");
+                        Console.WriteLine("> Fahrzeug finden\nBitte geben Sie das Kennzeichen des zu findenden Fahrzeugs an:");
                         string licensePlateToFind = Console.ReadLine();
                         var (foundLevel, foundSpot) = garage.FindVehicle(licensePlateToFind);
 
                         if (foundLevel != -1 && foundSpot != -1)
                         {
                             //correction for user output
-                            Console.WriteLine($"Fahrzeug gefunden auf Ebene {foundLevel + 1}, Parkplatz {foundSpot + 1}");
+                            Console.WriteLine($"> Fahrzeug gefunden auf Ebene {foundLevel + 1}, Parkplatz {foundSpot + 1}");
                         }
                         else
                         {
-                            Console.WriteLine("Fahrzeug konnte nicht gefunden werden.");
+                            Console.WriteLine("> Fahrzeug konnte nicht gefunden werden.");
                         }
                         break;
 
                     // count free spaces
                     case "4":
-                        Console.WriteLine($"Anzahl verfügbarer Parkplätze: {garage.CountFreeSpaces()}");
+                        Console.WriteLine($"> Anzahl verfügbarer Parkplätze: {garage.CountFreeSpaces()}");
                         break;
 
                     // edit levels
                     case "5":
-                        Console.WriteLine("Anzahl der Ebenen ändern\nBitte geben Sie die neue Anzahl der Ebenen ein:");
+                        Console.WriteLine("> Anzahl der Ebenen ändern\nBitte geben Sie die neue Anzahl der Ebenen ein:");
                         string newLevelCountStr = Console.ReadLine();
 
                         if (newLevelCountStr != null && int.TryParse(newLevelCountStr, out int newLevelCount))
                         {
                             if (garage.ModifyLevels(newLevelCount))
                             {
-                                Console.WriteLine($"Die Anzahl der Ebenen wurde erfolgreich auf {newLevelCount} geändert.");
+                                Console.WriteLine($"> Die Anzahl der Ebenen wurde erfolgreich auf {newLevelCount} geändert.");
                             }
                             else
                             {
-                                Console.WriteLine("Die Anzahl der Ebenen konnte nicht geändert werden. Stellen Sie sicher, dass ausreichend Parkplätze zum Umparken vorhanden sind.");
+                                Console.WriteLine("> Die Anzahl der Ebenen konnte nicht geändert werden. Stellen Sie sicher, dass ausreichend Parkplätze zum Umparken vorhanden sind bzw. Ihre Eingabe korrekt ist.");
                             }
                         }
                         else
                         {
-                            Console.WriteLine("Ungültige Eingabe.");
+                            Console.WriteLine("> Ungültige Eingabe.");
                         }
                         break;
 
@@ -439,7 +463,7 @@ class Program
                         keepRunning = false;
                         break;
                     default:
-                        Console.WriteLine("Ungültige Auswahl.");
+                        Console.WriteLine("> Ungültige Auswahl.");
                         break;
                 }
             }
